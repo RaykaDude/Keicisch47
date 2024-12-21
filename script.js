@@ -8,6 +8,9 @@ const items = [
 
 let isSpinning = false;
 
+// Добавим определение мобильного устройства
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 document.getElementById('openCase').addEventListener('click', function() {
     if (isSpinning) return;
     isSpinning = true;
@@ -15,6 +18,7 @@ document.getElementById('openCase').addEventListener('click', function() {
     
     const roulette = document.getElementById('roulette');
     
+    // Сбрасываем стили
     roulette.style.transition = 'none';
     roulette.style.transform = 'translateX(0)';
     roulette.offsetHeight;
@@ -24,13 +28,18 @@ document.getElementById('openCase').addEventListener('click', function() {
     const winningItem = getRandomItem();
     
     const rouletteItems = [];
-    for (let i = 0; i < 40; i++) {
+    // Уменьшаем количество элементов для мобильных устройств
+    const itemsCount = isMobile ? 20 : 40;
+    
+    for (let i = 0; i < itemsCount; i++) {
         rouletteItems.push(getRandomItem());
     }
     
     rouletteItems.push(winningItem);
     
-    for (let i = 0; i < 10; i++) {
+    // Уменьшаем количество элементов после выигрышного для мобильных
+    const afterItemsCount = isMobile ? 5 : 10;
+    for (let i = 0; i < afterItemsCount; i++) {
         rouletteItems.push(getRandomItem());
     }
     
@@ -39,20 +48,27 @@ document.getElementById('openCase').addEventListener('click', function() {
         roulette.appendChild(element);
     });
     
-    const itemWidth = 140;
+    const itemWidth = isMobile ? 100 : 140; // Уменьшаем ширину элементов для мобильных
     const windowCenter = document.querySelector('.roulette-window').offsetWidth / 2;
-    const targetPosition = -(40 * itemWidth) + (windowCenter - itemWidth/2);
+    const targetPosition = -(itemsCount * itemWidth) + (windowCenter - itemWidth/2);
+    
+    // Уменьшаем время анимации для мобильных устройств
+    const animationDuration = isMobile ? 6 : 8;
     
     requestAnimationFrame(() => {
-        roulette.style.transition = 'transform 8s cubic-bezier(0.21, 0.53, 0.29, 0.99)';
+        roulette.style.transition = `transform ${animationDuration}s cubic-bezier(0.21, 0.53, 0.29, 0.99)`;
         roulette.style.transform = `translateX(${targetPosition}px)`;
     });
     
+    // Добавляем класс для плавной анимации
+    roulette.classList.add('spinning');
+    
     setTimeout(() => {
+        roulette.classList.remove('spinning');
         showWinningPopup(winningItem);
         isSpinning = false;
         this.disabled = false;
-    }, 8000);
+    }, animationDuration * 1000);
 });
 
 function getRandomItem() {

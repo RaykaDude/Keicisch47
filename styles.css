@@ -67,6 +67,9 @@ body {
     position: absolute;
     left: 0;
     transition: transform 8s cubic-bezier(0.21, 0.53, 0.29, 0.99);
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .roulette-item {
@@ -372,12 +375,16 @@ body {
 
     .roulette-container {
         height: 120px;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     .roulette-item {
         min-width: 100px;
         height: 120px;
         padding: 10px;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 
     .possible-drops {
@@ -407,6 +414,10 @@ body {
         width: 90%;
         padding: 25px;
         margin: 20px;
+    }
+
+    .roulette-items {
+        transition: transform 6s cubic-bezier(0.21, 0.53, 0.29, 0.99);
     }
 }
 
@@ -543,4 +554,8 @@ body {
     .legendary {
         animation: none;
     }
+}
+
+.spinning {
+    pointer-events: none;
 }
