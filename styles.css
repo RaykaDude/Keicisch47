@@ -51,36 +51,30 @@ body {
     border-radius: 10px;
     overflow: hidden;
     margin: 30px 0;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    display: flex;
+    justify-content: center;
 }
 
 .roulette-window {
-    width: 100%;
+    width: calc(100% - 20px);
     height: 100%;
     overflow: hidden;
     position: relative;
-    display: flex;
-    justify-content: center;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
 }
 
 .roulette-items {
     display: flex;
     position: absolute;
     left: 0;
-    transition: transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99);
+    height: 100%;
     will-change: transform;
-    backface-visibility: hidden;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    padding-left: calc(50% - 50px);
 }
 
 .roulette-item {
-    min-width: 100px;
-    height: 120px;
-    margin: 0 5px;
+    flex: 0 0 100px;
+    height: 100%;
+    margin: 0;
     background: #333;
     border-radius: 10px;
     display: flex;
@@ -89,9 +83,6 @@ body {
     justify-content: center;
     padding: 15px;
     position: relative;
-    overflow: hidden;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
 }
 
 .roulette-item::before {
@@ -117,10 +108,34 @@ body {
 .pointer {
     position: absolute;
     top: 0;
-    width: 4px;
-    height: 150px;
+    left: 50%;
+    width: 2px;
+    height: 100%;
     background: #ff6b6b;
-    z-index: 1;
+    z-index: 2;
+    transform: translateX(-50%);
+}
+
+.pointer::before,
+.pointer::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+}
+
+.pointer::before {
+    top: 0;
+    border-top: 6px solid #ff6b6b;
+}
+
+.pointer::after {
+    bottom: 0;
+    border-bottom: 6px solid #ff6b6b;
 }
 
 .case-preview {
