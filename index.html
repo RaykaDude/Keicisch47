@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Кейс Рулетка</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="case-container">
+            <div class="case-header">
+                <h2>Премиум Кейс</h2>
+                <button id="openCase" class="open-button">
+                    <i class="fas fa-box-open"></i>
+                    Открыть кейс (100₽)
+                </button>
+            </div>
+            
+            <div class="roulette-container">
+                <div class="roulette-window">
+                    <div class="roulette-items" id="roulette">
+                        <!-- JS будет добавлять элементы сюда -->
+                    </div>
+                </div>
+                <div class="pointer"></div>
+            </div>
+
+            <div class="case-preview">
+                <h3>Возможные дропы:</h3>
+                <div class="possible-drops">
+                    <div class="drop-item legendary">
+                        <div class="drop-icon"><i class="fas fa-crown"></i></div>
+                        <span>Аркадий Страпонов</span>
+                        <div class="drop-price">15,000₽</div>
+                    </div>
+                    <div class="drop-item mythical">
+                        <div class="drop-icon"><i class="fas fa-gem"></i></div>
+                        <span>Арсений Олений</span>
+                        <div class="drop-price">7,500₽</div>
+                    </div>
+                    <div class="drop-item rare">
+                        <div class="drop-icon"><i class="fas fa-star"></i></div>
+                        <span>Нина Хуезина</span>
+                        <div class="drop-price">3,000₽</div>
+                    </div>
+                    <div class="drop-item uncommon">
+                        <div class="drop-icon"><i class="fas fa-certificate"></i></div>
+                        <span>Валера Хуила</span>
+                        <div class="drop-price">1,000₽</div>
+                    </div>
+                    <div class="drop-item common">
+                        <div class="drop-icon"><i class="fas fa-circle"></i></div>
+                        <span>Виталий Бобриков</span>
+                        <div class="drop-price">500₽</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
