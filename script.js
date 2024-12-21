@@ -1,9 +1,10 @@
 const items = [
     { name: 'Аркадий Страпонов', image: 'arkady.jpg', rarity: 'legendary', chance: 5, price: 15000 },
-    { name: 'Арсений Олений', image: 'arseny.jpg', rarity: 'mythical', chance: 10, price: 7500 },
+    { name: 'Арсений Олений', image: 'arseny.jpg', rarity: 'mythical', chance: 8, price: 7500 },
+    { name: 'Ритузики Подгузники', image: 'rituziki.jpg', rarity: 'mythical', chance: 8, price: 7000 },
     { name: 'Нина Хуезина', image: 'nina.jpg', rarity: 'rare', chance: 15, price: 3000 },
-    { name: 'Валера Хуила', image: 'valera.jpg', rarity: 'uncommon', chance: 30, price: 1000 },
-    { name: 'Виталий Бобриков', image: 'vitaly.jpg', rarity: 'common', chance: 40, price: 500 }
+    { name: 'Валера Хуила', image: 'valera.jpg', rarity: 'uncommon', chance: 29, price: 1000 },
+    { name: 'Виталий Бобриков', image: 'vitaly.jpg', rarity: 'common', chance: 35, price: 500 }
 ];
 
 let isSpinning = false;
@@ -28,22 +29,13 @@ document.getElementById('openCase').addEventListener('click', function() {
     const winningItem = getRandomItem();
     const rouletteItems = [];
     
-    // Фиксированное количество элементов для всех устройств
-    const totalItems = 30;
-    const winningPosition = 20; // Позиция выигрышного предмета
-    
-    // Заполняем элементы до выигрышного
-    for (let i = 0; i < winningPosition; i++) {
+    // Создаем массив из 30 предметов
+    for (let i = 0; i < 30; i++) {
         rouletteItems.push(getRandomItem());
     }
     
-    // Добавляем выигрышный предмет
-    rouletteItems.push(winningItem);
-    
-    // Добавляем оставшиеся элементы
-    for (let i = winningPosition + 1; i < totalItems; i++) {
-        rouletteItems.push(getRandomItem());
-    }
+    // Заменяем элемент в центре (позиция 15) на выигрышный
+    rouletteItems[15] = winningItem;
     
     // Создаем элементы
     rouletteItems.forEach(item => {
@@ -52,12 +44,12 @@ document.getElementById('openCase').addEventListener('click', function() {
     });
     
     // Вычисляем позицию для остановки
-    const itemWidth = 100; // Фиксированная ширина для всех устройств
+    const itemWidth = 100;
     const windowWidth = document.querySelector('.roulette-window').offsetWidth;
     const centerOffset = (windowWidth / 2) - (itemWidth / 2);
-    const targetPosition = -(winningPosition * itemWidth) + centerOffset;
+    const targetPosition = -(15 * itemWidth) + centerOffset;
     
-    // Запускаем анимацию с меньшей длительностью
+    // Запускаем анимацию
     requestAnimationFrame(() => {
         roulette.style.transition = 'transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99)';
         roulette.style.transform = `translateX(${targetPosition}px)`;
