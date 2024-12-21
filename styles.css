@@ -46,11 +46,13 @@ body {
 
 .roulette-container {
     position: relative;
-    height: 150px;
+    height: 120px;
     background: #1a1a1a;
     border-radius: 10px;
     overflow: hidden;
     margin: 30px 0;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .roulette-window {
@@ -60,21 +62,24 @@ body {
     position: relative;
     display: flex;
     justify-content: center;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .roulette-items {
     display: flex;
     position: absolute;
     left: 0;
-    transition: transform 8s cubic-bezier(0.21, 0.53, 0.29, 0.99);
+    transition: transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99);
     will-change: transform;
     backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
     transform: translateZ(0);
 }
 
 .roulette-item {
-    min-width: 130px;
-    height: 150px;
+    min-width: 100px;
+    height: 120px;
     margin: 0 5px;
     background: #333;
     border-radius: 10px;
@@ -85,6 +90,8 @@ body {
     padding: 15px;
     position: relative;
     overflow: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .roulette-item::before {
@@ -417,7 +424,7 @@ body {
     }
 
     .roulette-items {
-        transition: transform 6s cubic-bezier(0.21, 0.53, 0.29, 0.99);
+        transition: transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99);
     }
 }
 

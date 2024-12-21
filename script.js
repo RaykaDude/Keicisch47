@@ -18,7 +18,7 @@ document.getElementById('openCase').addEventListener('click', function() {
     
     const roulette = document.getElementById('roulette');
     
-    // Сбрасываем стили
+    // Сбрасываем стили и позицию
     roulette.style.transition = 'none';
     roulette.style.transform = 'translateX(0)';
     roulette.offsetHeight;
@@ -26,49 +26,48 @@ document.getElementById('openCase').addEventListener('click', function() {
     roulette.innerHTML = '';
     
     const winningItem = getRandomItem();
-    
     const rouletteItems = [];
-    // Уменьшаем количество элементов для мобильных устройств
-    const itemsCount = isMobile ? 20 : 40;
     
-    for (let i = 0; i < itemsCount; i++) {
+    // Фиксированное количество элементов для всех устройств
+    const totalItems = 30;
+    const winningPosition = 20; // Позиция выигрышного предмета
+    
+    // Заполняем элементы до выигрышного
+    for (let i = 0; i < winningPosition; i++) {
         rouletteItems.push(getRandomItem());
     }
     
+    // Добавляем выигрышный предмет
     rouletteItems.push(winningItem);
     
-    // Уменьшаем количество элементов после выигрышного для мобильных
-    const afterItemsCount = isMobile ? 5 : 10;
-    for (let i = 0; i < afterItemsCount; i++) {
+    // Добавляем оставшиеся элементы
+    for (let i = winningPosition + 1; i < totalItems; i++) {
         rouletteItems.push(getRandomItem());
     }
     
+    // Создаем элементы
     rouletteItems.forEach(item => {
         const element = createRouletteItem(item);
         roulette.appendChild(element);
     });
     
-    const itemWidth = isMobile ? 100 : 140; // Уменьшаем ширину элементов для мобильных
-    const windowCenter = document.querySelector('.roulette-window').offsetWidth / 2;
-    const targetPosition = -(itemsCount * itemWidth) + (windowCenter - itemWidth/2);
+    // Вычисляем позицию для остановки
+    const itemWidth = 100; // Фиксированная ширина для всех устройств
+    const windowWidth = document.querySelector('.roulette-window').offsetWidth;
+    const centerOffset = (windowWidth / 2) - (itemWidth / 2);
+    const targetPosition = -(winningPosition * itemWidth) + centerOffset;
     
-    // Уменьшаем время анимации для мобильных устройств
-    const animationDuration = isMobile ? 6 : 8;
-    
+    // Запускаем анимацию с меньшей длительностью
     requestAnimationFrame(() => {
-        roulette.style.transition = `transform ${animationDuration}s cubic-bezier(0.21, 0.53, 0.29, 0.99)`;
+        roulette.style.transition = 'transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99)';
         roulette.style.transform = `translateX(${targetPosition}px)`;
     });
     
-    // Добавляем класс для плавной анимации
-    roulette.classList.add('spinning');
-    
     setTimeout(() => {
-        roulette.classList.remove('spinning');
         showWinningPopup(winningItem);
         isSpinning = false;
         this.disabled = false;
-    }, animationDuration * 1000);
+    }, 5000);
 });
 
 function getRandomItem() {
