@@ -29,13 +29,17 @@ document.getElementById('openCase').addEventListener('click', function() {
     const winningItem = getRandomItem();
     const rouletteItems = [];
     
-    // Создаем массив из 30 предметов
-    for (let i = 0; i < 30; i++) {
+    // Уменьшаем количество элементов для мобильных устройств
+    const totalItems = isMobile ? 20 : 30;
+    const winningPosition = isMobile ? 10 : 15;
+    
+    // Создаем массив предметов
+    for (let i = 0; i < totalItems; i++) {
         rouletteItems.push(getRandomItem());
     }
     
-    // Заменяем элемент в центре (позиция 15) на выигрышный
-    rouletteItems[15] = winningItem;
+    // Заменяем элемент на выигрышный
+    rouletteItems[winningPosition] = winningItem;
     
     // Создаем элементы
     rouletteItems.forEach(item => {
@@ -44,14 +48,16 @@ document.getElementById('openCase').addEventListener('click', function() {
     });
     
     // Вычисляем позицию для остановки
-    const itemWidth = 100;
+    const itemWidth = isMobile ? 80 : 100; // Меньшая ширина для мобильных
     const windowWidth = document.querySelector('.roulette-window').offsetWidth;
     const centerOffset = (windowWidth / 2) - (itemWidth / 2);
-    const targetPosition = -(15 * itemWidth) + centerOffset;
+    const targetPosition = -(winningPosition * itemWidth) + centerOffset;
     
-    // Запускаем анимацию
+    // Запускаем анимацию с меньшей длительностью для мобильных
+    const duration = isMobile ? 4 : 5;
+    
     requestAnimationFrame(() => {
-        roulette.style.transition = 'transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99)';
+        roulette.style.transition = `transform ${duration}s cubic-bezier(0.21, 0.53, 0.29, 0.99)`;
         roulette.style.transform = `translateX(${targetPosition}px)`;
     });
     
@@ -59,7 +65,7 @@ document.getElementById('openCase').addEventListener('click', function() {
         showWinningPopup(winningItem);
         isSpinning = false;
         this.disabled = false;
-    }, 5000);
+    }, duration * 1000);
 });
 
 function getRandomItem() {

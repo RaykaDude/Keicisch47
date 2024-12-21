@@ -387,11 +387,10 @@ body {
     }
 
     .roulette-item {
-        min-width: 100px;
-        height: 120px;
-        padding: 10px;
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
+        min-width: 80px !important;
+        height: 100px !important;
+        padding: 8px;
+        font-size: 12px;
     }
 
     .possible-drops {
@@ -425,6 +424,14 @@ body {
 
     .roulette-items {
         transition: transform 5s cubic-bezier(0.21, 0.53, 0.29, 0.99);
+    }
+
+    .roulette-container {
+        height: 100px;
+    }
+
+    .pointer {
+        height: 100px;
     }
 }
 
