@@ -17,14 +17,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export const initUser = async (nickname) => {
+const initUser = async (nickname) => {
     try {
         const userCredential = await signInAnonymously(auth);
         const userId = userCredential.user.uid;
         
         await setDoc(doc(db, "users", userId), {
             nickname: nickname,
-            balance: 1000, // Начальный баланс
+            balance: 1000,
             inventory: [{
                 id: "starter",
                 name: "Приветственный бонус",
@@ -33,7 +33,7 @@ export const initUser = async (nickname) => {
                 icon: "fa-gift",
                 price: 0,
                 obtained: new Date().toISOString()
-            }], // Начальный предмет в инвентаре
+            }],
             createdAt: new Date().toISOString()
         });
         
@@ -44,7 +44,7 @@ export const initUser = async (nickname) => {
     }
 };
 
-export const getUserData = async (userId) => {
+const getUserData = async (userId) => {
     try {
         const docRef = doc(db, "users", userId);
         const docSnap = await getDoc(docRef);
@@ -59,7 +59,7 @@ export const getUserData = async (userId) => {
     }
 };
 
-export const updateUserInventory = async (userId, newItem) => {
+const updateUserInventory = async (userId, newItem) => {
     try {
         const userRef = doc(db, "users", userId);
         const userData = await getDoc(userRef);
@@ -77,7 +77,7 @@ export const updateUserInventory = async (userId, newItem) => {
     }
 };
 
-export const updateUserBalance = async (userId, newBalance) => {
+const updateUserBalance = async (userId, newBalance) => {
     try {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, {
