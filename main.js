@@ -14,13 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nickname) {
             console.log('Attempting to create user with nickname:', nickname);
             try {
+                console.log('Before initUser call');
                 const userId = await initUser(nickname);
-                console.log('User created with ID:', userId);
+                console.log('After initUser call, userId:', userId);
                 if (userId) {
                     currentUser = await getUserData(userId);
                     console.log('Got user data:', currentUser);
                     updateUIWithUserData(currentUser);
                     loginModal.style.display = 'none';
+                } else {
+                    console.log('Failed to get userId');
                 }
             } catch (error) {
                 console.error('Error during login:', error);
