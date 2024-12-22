@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <div id="userProfile" class="user-profile" style="display: none;">
+        <div class="user-avatar"></div>
+        <div class="user-info">
+            <div class="user-nickname"></div>
+            <div class="user-balance">0 ₽</div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="login-modal">
+        <div class="login-form">
+            <h2>Введите никнейм</h2>
+            <input type="text" id="nicknameInput" placeholder="Ваш никнейм">
+            <button id="loginButton">Начать игру</button>
+        </div>
+    </div>
+
     <div class="container">
         <div class="case-container">
             <div class="case-header">
@@ -67,6 +83,12 @@
             </div>
         </div>
     </div>
-    <script src="script.js?v=1.5"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+    </script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html> 
