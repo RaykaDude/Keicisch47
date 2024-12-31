@@ -1,0 +1,362 @@
+<html><head><base href="/">
+<meta charset="UTF-8">
+<title>Case Opening Simulator</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: radial-gradient(circle at top right, #2b1055, #7597de);
+        color: #fff;
+        min-height: 100vh;
+    }
+    .case {
+        background: linear-gradient(45deg, rgba(45,45,45,0.8), rgba(61,61,61,0.8));
+        padding: 25px;
+        border-radius: 20px;
+        margin: 20px 0;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+    }
+    .case:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        border-color: rgba(255,255,255,0.3);
+    }
+    .case h3 {
+        margin: 0;
+        font-size: 1.5em;
+        color: #7597de;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .case p {
+        margin: 10px 0 0;
+        color: #ccc;
+    }
+    .inventory {
+        background: linear-gradient(45deg, rgba(45,45,45,0.8), rgba(61,61,61,0.8));
+        padding: 20px;
+        border-radius: 20px;
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 2px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+    }
+    .stats {
+        display: flex;
+        justify-content: space-between;
+        background: linear-gradient(45deg, rgba(45,45,45,0.8), rgba(61,61,61,0.8));
+        padding: 25px;
+        border-radius: 20px;
+        margin: 20px 0;
+        border: 2px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        font-size: 1.2em;
+    }
+    .item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        margin: 10px 0;
+        background: linear-gradient(45deg, rgba(61,61,61,0.8), rgba(77,77,77,0.8));
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .item:hover {
+        transform: scale(1.02) translateX(5px);
+        background: linear-gradient(45deg, rgba(77,77,77,0.8), rgba(93,93,77,0.8));
+        border-color: rgba(255,255,255,0.2);
+    }
+    .sell-button {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .sell-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(76,175,80,0.4);
+    }
+    .opening-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.95);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        flex-direction: column;
+        backdrop-filter: blur(10px);
+    }
+    .spinner {
+        width: 600px;
+        height: 120px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+        border-radius: 15px;
+        border: 3px solid #7597de;
+        margin-bottom: 20px;
+        box-shadow: 0 0 30px rgba(117,151,222,0.3);
+    }
+    .items-container {
+        display: flex;
+        position: absolute;
+        transition: transform 8s cubic-bezier(0.15, 0.85, 0.35, 1);
+    }
+    .spin-item {
+        width: 150px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(45deg, rgba(61,61,61,0.9), rgba(77,77,77,0.9));
+        color: white;
+        font-size: 16px;
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box;
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .spin-item.epic {
+        background: linear-gradient(45deg, #c31432, #240b36);
+        color: #ffd700;
+    }
+    .spin-item.rare {
+        background: linear-gradient(45deg, #2193b0, #6dd5ed);
+    }
+    .highlight {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-75px);
+        width: 2px;
+        height: 100%;
+        background: #ff0000;
+        box-shadow: 0 0 20px rgba(255,0,0,0.5);
+        pointer-events: none;
+    }
+    .close-button {
+        padding: 12px 30px;
+        background: linear-gradient(45deg, #7597de, #2b1055);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        display: none;
+        margin-top: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    .close-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(117,151,222,0.5);
+    }
+    h2 {
+        color: #7597de;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-size: 2em;
+        margin: 30px 0 20px;
+    }
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.1);
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #7597de;
+        border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #2b1055;
+    }
+</style>
+</head>
+<body>
+    <div class="stats">
+        <div>&#x411;&#x430;&#x43b;&#x430;&#x43d;&#x441;: <span id="balance">1000</span> &#x43c;&#x43e;&#x43d;&#x435;&#x442;</div>
+        <div>&#x41e;&#x442;&#x43a;&#x440;&#x44b;&#x442;&#x43e; &#x43a;&#x435;&#x439;&#x441;&#x43e;&#x432;: <span id="opened">0</span></div>
+    </div>
+    
+    <div class="case" onclick="openCase(100)">
+        <h3>&#x41e;&#x431;&#x44b;&#x447;&#x43d;&#x44b;&#x439; &#x43a;&#x435;&#x439;&#x441; (100 &#x43c;&#x43e;&#x43d;&#x435;&#x442;)</h3>
+        <p>&#x428;&#x430;&#x43d;&#x441; &#x432;&#x44b;&#x43f;&#x430;&#x434;&#x435;&#x43d;&#x438;&#x44f;: &#x41e;&#x431;&#x44b;&#x447;&#x43d;&#x44b;&#x439; - 70%, &#x420;&#x435;&#x434;&#x43a;&#x438;&#x439; - 25%, &#x42d;&#x43f;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x438;&#x439; - 5%</p>
+    </div>
+    
+    <div class="case" onclick="openCase(250)">
+        <h3>&#x420;&#x435;&#x434;&#x43a;&#x438;&#x439; &#x43a;&#x435;&#x439;&#x441; (250 &#x43c;&#x43e;&#x43d;&#x435;&#x442;)</h3>
+        <p>&#x428;&#x430;&#x43d;&#x441; &#x432;&#x44b;&#x43f;&#x430;&#x434;&#x435;&#x43d;&#x438;&#x44f;: &#x41e;&#x431;&#x44b;&#x447;&#x43d;&#x44b;&#x439; - 40%, &#x420;&#x435;&#x434;&#x43a;&#x438;&#x439; - 45%, &#x42d;&#x43f;&#x438;&#x447;&#x435;&#x441;&#x43a;&#x438;&#x439; - 15%</p>
+    </div>
+    
+    <h2>&#x418;&#x43d;&#x432;&#x435;&#x43d;&#x442;&#x430;&#x440;&#x44c;:</h2>
+    <div id="inventory" class="inventory"></div>
+
+    <div class="opening-container" id="openingContainer">
+        <div class="spinner">
+            <div class="items-container" id="itemsContainer"></div>
+            <div class="highlight"></div>
+        </div>
+        <button class="close-button" id="closeButton" onclick="closeSpinner()">&#x417;&#x430;&#x43a;&#x440;&#x44b;&#x442;&#x44c;</button>
+    </div>
+
+<script>const items = ["Виталий Бобриков", "Нина Хуезина", "Арсений Олений", "Валерий Хуилов", "Санька Кривочленов", "Андрей Свинотов", "Аркадий Страпонов", "Ритузик", "Ванька Пукаков", "Лерка Жирушкина"];
+const rarities = {
+  common: items.slice(0, 3),
+  rare: items.slice(3, 7),
+  epic: items.slice(7)
+};
+const itemPrices = {
+  common: 50,
+  rare: 150,
+  epic: 400
+};
+let balance = 1000;
+let inventory = [];
+let openedCount = 0;
+function getItemRarity(item) {
+  if (rarities.common.includes(item)) return 'common';
+  if (rarities.rare.includes(item)) return 'rare';
+  return 'epic';
+}
+function sellItem(index) {
+  const item = inventory[index];
+  const rarity = getItemRarity(item);
+  const price = itemPrices[rarity];
+  balance += price;
+  inventory.splice(index, 1);
+  playSound('sell');
+  updateUI();
+}
+function updateUI() {
+  document.getElementById('balance').textContent = balance;
+  document.getElementById('opened').textContent = openedCount;
+  const inventoryElement = document.getElementById('inventory');
+  inventoryElement.innerHTML = inventory.map((item, index) => {
+    const rarity = getItemRarity(item);
+    const price = itemPrices[rarity];
+    return `
+            <div class="item" style="border-color: ${rarity === 'epic' ? '#ffd700' : rarity === 'rare' ? '#2193b0' : 'rgba(255,255,255,0.1)'}">
+                <span>${item} (${price} монет)</span>
+                <button class="sell-button" onclick="sellItem(${index})">Продать</button>
+            </div>
+        `;
+  }).join('');
+}
+function getRandomItem(chances) {
+  const rand = Math.random() * 100;
+  if (rand < chances.common) {
+    return rarities.common[Math.floor(Math.random() * rarities.common.length)];
+  } else if (rand < chances.common + chances.rare) {
+    return rarities.rare[Math.floor(Math.random() * rarities.rare.length)];
+  } else {
+    return rarities.epic[Math.floor(Math.random() * rarities.epic.length)];
+  }
+}
+function closeSpinner() {
+  const openingContainer = document.getElementById('openingContainer');
+  openingContainer.style.opacity = '0';
+  openingContainer.style.transition = 'opacity 0.3s ease';
+  setTimeout(() => {
+    openingContainer.style.display = 'none';
+    openingContainer.style.opacity = '1';
+  }, 300);
+  document.getElementById('closeButton').style.display = 'none';
+}
+function createSpinnerItems(winningItem) {
+  const container = document.getElementById('itemsContainer');
+  container.innerHTML = '';
+  container.style.transform = 'translateX(0)';
+  const spinnerItems = [...Array(79)].map(() => items[Math.floor(Math.random() * items.length)]);
+  spinnerItems.splice(77, 0, winningItem);
+  spinnerItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = `spin-item ${getItemRarity(item)}`;
+    div.textContent = item;
+    container.appendChild(div);
+  });
+  return spinnerItems.length;
+}
+function openCase(price) {
+  if (balance < price) {
+    alert('Недостаточно монет!');
+    return;
+  }
+  playSound('open');
+  balance -= price;
+  openedCount++;
+  const chances = price === 100 ? {
+    common: 70,
+    rare: 25,
+    epic: 5
+  } : {
+    common: 40,
+    rare: 45,
+    epic: 15
+  };
+  const winningItem = getRandomItem(chances);
+  const openingContainer = document.getElementById('openingContainer');
+  const closeButton = document.getElementById('closeButton');
+  openingContainer.style.display = 'flex';
+  closeButton.style.display = 'none';
+  const itemCount = createSpinnerItems(winningItem);
+  const container = document.getElementById('itemsContainer');
+  const itemWidth = 150;
+  const finalPosition = -(itemCount - 4) * itemWidth + itemWidth / 2;
+  setTimeout(() => {
+    container.style.transform = `translateX(${finalPosition}px)`;
+    setTimeout(() => {
+      inventory.push(winningItem);
+      updateUI();
+      closeButton.style.display = 'block';
+      playSound('win');
+    }, 8000);
+  }, 100);
+}
+function playSound(type) {
+  try {
+    const audio = document.createElement('audio');
+    switch (type) {
+      case 'sell':
+        audio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1DOzo5NFJmd4mJgGhSQjg2NTM0O0VTY3J5eHRqXE9DPDo4OTxDTVlkaWxualxPRkA+PTs8PkFKWWdudHh2cW1nW1NNR0ZFRUZLUVdhb3h+gIF/fXl1cW1qaWlqbG9ydnp+gIGBgH98eXVxbmxrbW9yeHt/goSFhIJ/fHl1cm9tbm9xdHd7f4KFh4iHhYJ/e3dzc3R1eHt+gYSHiYqJh4WBfnt4dnZ3eXyAg4aJi4uKiIWCfnt5d3h6fYCEh4qMjIuJhoN/fHl4eHp9gYSIi46OjYuIhIF+e3p6e36BhYiLjo+OjImGg398e3t8f4KFiYyPkJCOi4iBf317e32AhIeKjZCRkY+MiYN/fHx8f4KGiYyPkZKRjouhmpWQioJ7c2xoX1tYV1haXWBjZmpub3Fvb21qaGVjYmJjZGZpbXF1eX1/gIB+";
+        break;
+      case 'open':
+        audio.src = "data:audio/wav;base64,UklGRjIBAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQ4BAACBhYqFbF1DOzo5NFJmd4mJgGhSQjg2NTM0O0VTY3J5eHRqXE9DPDo4OTxDTVlkaWxualxPRkA+PTs8PkFKWWdudHh2cWxnW1NNR0ZFRUZLUVdhb3h+gIF/fXl1cGtpaGhrbG9ydnp+gYKCgX98eXVxbmxrbW9yeHt/goSFhIJ/fHl1cm9tbm9xdHd7f4KFh4iHhYJ/e3dzc3R1eHt+gYSHiYqJh4WBfnt4dnZ3eXyAg4aJi4uKiIWCfnt5d3h6fYCEh4qMjIuJhoN/fHl4eHp9gYSIi46OjYuIhIF+e3p6e36BhYiLjo+OjImGg398e3t8f4KFiYyPkJCOi4iBf317e32AhIeKjZCRkY+MiYN/fHx8f4KGiYyPkZKRjouhmpWQioJ7c2xoX1tYV1haXWBjZmpub3Fvb21qaGVjYmJjZGZpbXF1eX1/gIB+";
+        break;
+      case 'win':
+        audio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1DOzo5NFJmd4mJgGhSQjg2NTM0O0VTY3J5eHRqXE9DPDo4OTxDTVlkaWxualxPRkA+PTs8PkFKWWdudHh2cW1nW1NNR0ZFRUZLUVdhb3h+gIF/fXl1cW1qaWlqbG9ydnp+gIGBgH98eXVxbmxrbW9yeHt/goSFhIJ/fHl1cm9tbm9xdHd7f4KFh4iHhYJ/e3dzc3R1eHt+gYSHiYqJh4WBfnt4dnZ3eXyAg4aJi4uKiIWCfnt5d3h6fYCEh4qMjIuJhoN/fHl4eHp9gYSIi46OjYuIhIF+e3p6e36BhYiLjo+OjImGg398e3t8f4KFiYyPkJCOi4iBf317e32AhIeKjZCRkY+MiYN/fHx8f4KGiYyPkZKRjouhmpWQioJ7c2xoX1tYV1haXWBjZmpub3Fvb21qaGVjYmJjZGZpbXF1eX1/gIB+";
+        break;
+    }
+    audio.volume = 0.5;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.log("Audio playback failed:", error);
+      });
+    }
+  } catch (err) {
+    console.log("Error playing sound:", err);
+  }
+}
+updateUI();</script>
+</body></html>
