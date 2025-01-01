@@ -1,0 +1,1575 @@
+<html><head><base href="/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GLOBAL THERMONUCLEAR SIMULATION</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #001a00;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: "Courier New", Courier, monospace;
+        color: #00ff00;
+    }
+
+    .map-container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        border: none;
+        box-shadow: none;
+        overflow: hidden;
+    }
+
+    .country {
+        fill: #003300;
+        stroke: #00ff00;
+        stroke-width: 0.5;
+        transition: fill 0.3s;
+        cursor: crosshair;
+    }
+
+    .country:hover {
+        fill: #00ff00;
+    }
+
+    .explosion {
+        fill: none;
+        stroke: #ff0000;
+        stroke-width: 2;
+        pointer-events: none;
+    }
+
+    .terminal {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        width: calc(100vw - 10px);
+        max-width: 300px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        padding: 15px;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        z-index: 1000;
+        font-size: 12px;
+    }
+
+    .missile-menu {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+        width: calc(100vw - 10px);
+        max-width: 250px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        padding: 15px;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+    }
+
+    .missile-option {
+        margin: 5px 0;
+        padding: 3px;
+        border: 1px solid #00ff00;
+        cursor: pointer;
+        font-size: 11px;
+    }
+
+    .missile-option:hover {
+        background: rgba(0, 255, 0, 0.1);
+    }
+
+    .missile-option.selected {
+        background: rgba(0, 255, 0, 0.2);
+    }
+
+    .terminal-header {
+        border-bottom: 1px solid #00ff00;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .terminal-content {
+        height: 200px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+    }
+
+    .terminal input {
+        width: 100%;
+        background: transparent;
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 5px;
+        font-family: inherit;
+    }
+
+    .scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 255, 0, 0.03) 50%,
+            rgba(0, 0, 0, 0.1) 50%
+        );
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0.15;
+    }
+
+    .warning {
+        color: #ff0000;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translate(0, 0); }
+        10%, 30%, 50%, 70%, 90% { transform: translate(-5px, -5px); }
+        20%, 40%, 60%, 80% { transform: translate(5px, 5px); }
+    }
+
+    .shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .yield-indicator {
+        position: absolute;
+        left: 5px;
+        top: 5px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        padding: 5px;
+        font-size: 14px;
+        z-index: 1001;
+    }
+
+    .country-select {
+        position: absolute;
+        left: 5px;
+        top: auto;
+        bottom: 5px;
+        width: calc(100vw - 10px);
+        max-width: 250px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        padding: 15px;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+    }
+
+    .country-select select {
+        width: 100%;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 5px;
+        margin-top: 10px;
+        font-family: inherit;
+    }
+
+    .country-select option {
+        background: #001a00;
+    }
+
+    .enemy-alert {
+        color: #ff0000;
+        animation: blink 1s infinite;
+    }
+    
+    .missile-path {
+        fill: none;
+        stroke: #ff0000;
+        stroke-width: 2;
+        stroke-dasharray: 5,5;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .missile {
+        fill: #00ff00;
+        pointer-events: none;
+    }
+
+    .city-marker {
+        fill: #00ff00;
+        stroke: none;
+        pointer-events: none;
+    }
+
+    .city-label {
+        fill: #00ff00;
+        font-size: 8px;
+        pointer-events: none;
+        font-family: "Courier New", monospace;
+    }
+
+    .start-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 26, 0, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .start-menu {
+        background: rgba(0, 26, 0, 0.9);
+        border: 2px solid #00ff00;
+        padding: 20px;
+        text-align: center;
+        width: 90vw;
+        max-width: 400px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .language-select {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 3000;
+    }
+
+    .language-select select {
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 5px;
+        font-family: inherit;
+    }
+
+    .diplomacy-menu {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 5px;
+        width: calc(100vw - 10px);
+        max-width: 300px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        padding: 15px;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .diplomacy-menu.active {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .diplomacy-status {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #00ff00;
+        background: rgba(0, 26, 0, 0.8);
+    }
+
+    .diplomacy-actions {
+        margin-top: 8px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .relation-action {
+        padding: 4px 8px;
+        cursor: pointer;
+        border: 1px solid #00ff00;
+        transition: background 0.2s;
+    }
+
+    .hostile {
+        color: #ff0000;
+        border-color: #ff0000;
+    }
+
+    .neutral {
+        color: #yellow;
+        border-color: #yellow; 
+    }
+
+    .allied {
+        color: #00ff00;
+    }
+
+    .diplomacy-action {
+        margin: 5px 0;
+        padding: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .diplomacy-history {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 255, 0, 0.3);
+        font-size: 11px;
+    }
+
+    @media (max-width: 600px) {
+        .terminal-content {
+            height: 150px;
+        }
+        
+        .city-label {
+            font-size: 6px;
+        }
+        
+        .missile-option {
+            font-size: 10px;
+        }
+        
+        .start-menu h2 {
+            font-size: 18px;
+        }
+    }
+
+    .wemm-splash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #001a00;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        font-family: "Courier New", monospace;
+    }
+
+    .wemm-content {
+        color: #00ff00;
+        font-size: 24px;
+        text-align: center;
+    }
+
+    .wemm-cursor {
+        display: inline-block;
+        width: 10px;
+        height: 24px;
+        background: #00ff00;
+        margin-left: 4px;
+        animation: blink 0.7s infinite;
+    }
+    
+    /* Add tab system CSS */
+    .tabs {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 5px;
+        z-index: 1001;
+    }
+
+    .tab {
+        padding: 5px 15px;
+        background: rgba(0, 26, 0, 0.9);
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        cursor: pointer;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+    }
+
+    .tab.active {
+        background: rgba(0, 255, 0, 0.2);
+    }
+    
+    /* Add fixed position diplomacy window styles */
+    .diplomacy-window {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 600px;
+      height: 80vh;
+      background: rgba(0, 26, 0, 0.95);
+      border: 2px solid #00ff00;
+      padding: 20px;
+      z-index: 2000;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .diplomacy-window.active {
+      display: block;
+    }
+
+    .diplomacy-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #00ff00;
+      cursor: pointer;
+      border: 1px solid #00ff00;
+      padding: 5px 10px;
+    }
+
+    .diplomacy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+    <div id="wemm_splash" class="wemm-splash">
+        <div class="wemm-content">
+            <span id="wemm-text"></span><span class="wemm-cursor"></span>
+        </div>
+    </div>
+    <div id="start-screen" class="start-screen">
+        <div class="language-select">
+            <select id="language-select">
+                <option value="EN">ENGLISH</option>
+                <option value="RU">&#x420;&#x423;&#x421;&#x421;&#x41a;&#x418;&#x419;</option>
+            </select>
+        </div>
+        <div class="start-menu">
+            <h2>GLOBAL THERMONUCLEAR WAR</h2>
+            <p>SELECT YOUR NATION TO BEGIN</p>
+            <select id="initial-country-select">
+                <option value>SELECT COUNTRY</option>
+                <option value="USA">UNITED STATES</option>
+                <option value="RUS">RUSSIA</option>
+                <option value="CHN">CHINA</option>
+                <option value="GBR">UNITED KINGDOM</option>
+                <option value="FRA">FRANCE</option>
+                <option value="IRN">IRAN</option>
+                <option value="ISR">ISRAEL</option>
+                <option value="PAK">PAKISTAN</option>
+                <option value="IND">INDIA</option>
+                <option value="BLR">BELARUS</option>
+            </select>
+            <br><br>
+            <button id="start-game" style="background: transparent; color: #00ff00; border: 1px solid #00ff00; padding: 10px; cursor: pointer;">START SIMULATION</button>
+        </div>
+    </div>
+    <audio id="explosion-sound" preload="auto">
+      <source src="https://www.soundjay.com/mechanical/explosion-01.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="launch-sound" preload="auto">
+      <source src="https://www.soundjay.com/mechanical/missile-launch-01.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="background-music" loop preload="auto">
+      <source src="https://www.soundjay.com/ambient/dark-ambient-01.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="alert-sound" preload="auto">
+      <source src="https://www.soundjay.com/mechanical/alert-01.mp3" type="audio/mpeg">
+    </audio>
+    <div class="map-container" id="map">
+        <div class="scanline"></div>
+        <div class="yield-indicator">YIELD: <span id="yield">50</span> MT</div>
+        <div class="missile-menu">
+            <div class="terminal-header">MISSILE ARSENAL</div>
+            <div class="missile-option" data-yield="20" data-name="MINUTEMAN III">
+                MINUTEMAN III ICBM<br>
+                YIELD: 20MT<br>
+                RANGE: 13,000 KM
+            </div>
+            <div class="missile-option" data-yield="50" data-name="TRIDENT II">
+                TRIDENT II SLBM<br>
+                YIELD: 50MT<br>
+                RANGE: 12,000 KM
+            </div>
+            <div class="missile-option" data-yield="100" data-name="RS-28">
+                RS-28 SARMAT<br>
+                YIELD: 100MT<br>
+                RANGE: 18,000 KM
+            </div>
+            <div class="missile-option" data-yield="5" data-name="ATACMS">
+                MGM-140 ATACMS TACTICAL MISSILE<br>
+                YIELD: 5MT<br>
+                RANGE: 300 KM
+            </div>
+            <div class="missile-option" data-yield="8" data-name="ISKANDER">
+                9K720 ISKANDER TACTICAL MISSILE<br>
+                YIELD: 8MT<br>
+                RANGE: 500 KM
+            </div>
+            <div class="missile-option" data-yield="10" data-name="KALIBR">
+                3M-14 KALIBR CRUISE MISSILE<br>
+                YIELD: 10MT<br>
+                RANGE: 2500 KM
+            </div>
+        </div>
+        <div class="country-select">
+            <div class="terminal-header">SELECT YOUR NATION</div>
+            <select id="player-country">
+                <option value>SELECT COUNTRY</option>
+                <option value="USA">UNITED STATES</option>
+                <option value="RUS">RUSSIA</option>
+                <option value="CHN">CHINA</option>
+                <option value="GBR">UNITED KINGDOM</option>
+                <option value="FRA">FRANCE</option>
+                <option value="IRN">IRAN</option>
+                <option value="ISR">ISRAEL</option>
+                <option value="PAK">PAKISTAN</option>
+                <option value="IND">INDIA</option>
+                <option value="BLR">BELARUS</option>
+            </select>
+        </div>
+        <div class="diplomacy-window" id="diplomacy-window">
+          <div class="diplomacy-close" onclick="toggleDiplomacyWindow()">X</div>
+          <h2 style="color: #00ff00; text-align: center; margin-bottom: 20px;">DIPLOMATIC RELATIONS</h2>
+          <div class="diplomacy-grid" id="diplomacy-grid"></div>
+        </div>
+        <div class="terminal">
+            <div class="terminal-header">
+                GLOBAL THERMONUCLEAR WAR TERMINAL
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                &gt; SYSTEM INITIALIZED<br>
+                &gt; AWAITING COMMANDS<br>
+            </div>
+            <input type="text" id="terminal-input" placeholder="ENTER COMMAND..." autocomplete="off">
+        </div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-tab="game">GAME</div>
+        <div class="tab" data-tab="diplomacy">DIPLOMACY</div>
+    </div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+<script>function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === tabName);
+  });
+  if (tabName === 'diplomacy') {
+    toggleDiplomacyWindow();
+  }
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    switchTab(tab.dataset.tab);
+  });
+});
+const width = window.innerWidth;
+const height = window.innerHeight;
+let currentYield = 50;
+let detonations = [];
+let selectedMissile = "TRIDENT II";
+let playerCountry = "";
+let aiInterval;
+const countryCoords = {
+  USA: [-97, 38],
+  RUS: [105, 62],
+  CHN: [105, 35],
+  GBR: [-2, 54],
+  FRA: [2, 46],
+  IRN: [53, 32],
+  ISR: [35, 31],
+  PAK: [70, 30],
+  IND: [78, 21],
+  BLR: [28, 53]
+};
+const tacticalMissiles = {
+  ATACMS: {
+    name: "ATACMS",
+    yield: 5,
+    range: 300,
+    description: "MGM-140 ATACMS TACTICAL MISSILE<br>YIELD: 5MT<br>RANGE: 300 KM"
+  },
+  ISKANDER: {
+    name: "ISKANDER",
+    yield: 8,
+    range: 500,
+    description: "9K720 ISKANDER TACTICAL MISSILE<br>YIELD: 8MT<br>RANGE: 500 KM"
+  },
+  KALIBR: {
+    name: "KALIBR",
+    yield: 10,
+    range: 2500,
+    description: "3M-14 KALIBR CRUISE MISSILE<br>YIELD: 10MT<br>RANGE: 2500 KM"
+  }
+};
+const majorCities = {
+  USA: [{
+    name: "NEW YORK",
+    coords: [-74, 40.7],
+    population: 8400000
+  }, {
+    name: "LOS ANGELES",
+    coords: [-118.2, 34],
+    population: 4000000
+  }, {
+    name: "CHICAGO",
+    coords: [-87.6, 41.8],
+    population: 2700000
+  }, {
+    name: "HOUSTON",
+    coords: [-95.4, 29.8],
+    population: 2300000
+  }, {
+    name: "PHOENIX",
+    coords: [-112.1, 33.4],
+    population: 1600000
+  }, {
+    name: "WASHINGTON DC",
+    coords: [-77.03, 38.89],
+    population: 700000
+  }, {
+    name: "DALLAS",
+    coords: [-96.8, 32.78],
+    population: 1300000
+  }, {
+    name: "MIAMI",
+    coords: [-80.19, 25.76],
+    population: 450000
+  }],
+  RUS: [{
+    name: "MOSCOW",
+    coords: [37.6, 55.7],
+    population: 12500000
+  }, {
+    name: "ST PETERSBURG",
+    coords: [30.3, 59.9],
+    population: 5400000
+  }, {
+    name: "NOVOSIBIRSK",
+    coords: [82.9, 55],
+    population: 1600000
+  }, {
+    name: "YEKATERINBURG",
+    coords: [60.6, 56.8],
+    population: 1500000
+  }, {
+    name: "KAZAN",
+    coords: [49.1, 55.8],
+    population: 1250000
+  }, {
+    name: "VLADIVOSTOK",
+    coords: [131.9, 43.1],
+    population: 600000
+  }, {
+    name: "VOLGOGRAD",
+    coords: [44.51, 48.71],
+    population: 1000000
+  }],
+  CHN: [{
+    name: "SHANGHAI",
+    coords: [121.4, 31.2],
+    population: 24900000
+  }, {
+    name: "BEIJING",
+    coords: [116.4, 39.9],
+    population: 20400000
+  }, {
+    name: "GUANGZHOU",
+    coords: [113.2, 23.1],
+    population: 16000000
+  }, {
+    name: "SHENZHEN",
+    coords: [114.1, 22.5],
+    population: 12600000
+  }, {
+    name: "CHONGQING",
+    coords: [106.55, 29.56],
+    population: 30000000
+  }, {
+    name: "WUHAN",
+    coords: [114.3, 30.59],
+    population: 11000000
+  }],
+  GBR: [{
+    name: "LONDON",
+    coords: [-0.1, 51.5],
+    population: 9000000
+  }, {
+    name: "MANCHESTER",
+    coords: [-2.2, 53.5],
+    population: 2700000
+  }, {
+    name: "BIRMINGHAM",
+    coords: [-1.9, 52.5],
+    population: 2600000
+  }, {
+    name: "GLASGOW",
+    coords: [-4.25, 55.86],
+    population: 600000
+  }, {
+    name: "LEEDS",
+    coords: [-1.54, 53.8],
+    population: 500000
+  }],
+  FRA: [{
+    name: "PARIS",
+    coords: [2.3, 48.8],
+    population: 2140000
+  }, {
+    name: "MARSEILLE",
+    coords: [5.4, 43.3],
+    population: 850000
+  }, {
+    name: "LYON",
+    coords: [4.8, 45.7],
+    population: 510000
+  }, {
+    name: "TOULOUSE",
+    coords: [1.44, 43.6],
+    population: 470000
+  }, {
+    name: "NICE",
+    coords: [7.26, 43.7],
+    population: 340000
+  }],
+  IRN: [{
+    name: "TEHRAN",
+    coords: [51.4, 35.7],
+    population: 8000000
+  }, {
+    name: "ISFAHAN",
+    coords: [51.7, 32.6],
+    population: 2000000
+  }, {
+    name: "MASHHAD",
+    coords: [59.6, 36.3],
+    population: 3000000
+  }, {
+    name: "TABRIZ",
+    coords: [46.29, 38.08],
+    population: 1600000
+  }, {
+    name: "SHIRAZ",
+    coords: [52.53, 29.59],
+    population: 1900000
+  }],
+  ISR: [{
+    name: "TEL AVIV",
+    coords: [34.8, 32.1],
+    population: 450000
+  }, {
+    name: "JERUSALEM",
+    coords: [35.2, 31.8],
+    population: 930000
+  }, {
+    name: "HAIFA",
+    coords: [34.8, 32.8],
+    population: 280000
+  }, {
+    name: "ASHKELON",
+    coords: [34.57, 31.67],
+    population: 140000
+  }, {
+    name: "BEERSHEBA",
+    coords: [34.79, 31.25],
+    population: 210000
+  }],
+  PAK: [{
+    name: "ISLAMABAD",
+    coords: [73.1, 33.7],
+    population: 1000000
+  }, {
+    name: "KARACHI",
+    coords: [67.0, 24.9],
+    population: 15000000
+  }, {
+    name: "LAHORE",
+    coords: [74.3, 31.5],
+    population: 11000000
+  }, {
+    name: "FAISALABAD",
+    coords: [73.08, 31.41],
+    population: 3200000
+  }, {
+    name: "RAWALPINDI",
+    coords: [73.06, 33.6],
+    population: 2100000
+  }],
+  IND: [{
+    name: "NEW DELHI",
+    coords: [77.2, 28.6],
+    population: 29000000
+  }, {
+    name: "MUMBAI",
+    coords: [72.9, 19.1],
+    population: 21000000
+  }, {
+    name: "BENGALURU",
+    coords: [77.6, 12.9],
+    population: 12000000
+  }, {
+    name: "CHENNAI",
+    coords: [80.27, 13.08],
+    population: 7000000
+  }, {
+    name: "KOLKATA",
+    coords: [88.36, 22.57],
+    population: 4500000
+  }],
+  BLR: [{
+    name: "MINSK",
+    coords: [27.6, 53.9],
+    population: 2000000
+  }, {
+    name: "GOMEL",
+    coords: [31.0, 52.4],
+    population: 500000
+  }, {
+    name: "MINSK REGION",
+    coords: [28.0, 53.9],
+    population: 1500000
+  }, {
+    name: "VITEBSK",
+    coords: [30.2, 55.19],
+    population: 360000
+  }, {
+    name: "BREST",
+    coords: [23.68, 52.09],
+    population: 340000
+  }]
+};
+const countryPopulations = {
+  USA: 331900000,
+  RUS: 143400000,
+  CHN: 1402000000,
+  GBR: 67220000,
+  FRA: 67390000,
+  IRN: 85000000,
+  ISR: 9300000,
+  PAK: 220900000,
+  IND: 1380000000,
+  BLR: 9400000
+};
+const currentPopulations = {
+  ...countryPopulations
+};
+const svg = d3.select('#map').append('svg').attr('width', width).attr('height', height);
+const projection = d3.geoMercator().scale(width / (2.5 * Math.PI)).translate([width / 2, height / 1.5]).center([0, 20]);
+const path = d3.geoPath().projection(projection);
+let soundEnabled = true;
+let musicEnabled = true;
+const translations = {
+  EN: {
+    SELECT_NATION: "SELECT YOUR NATION TO BEGIN",
+    COMMAND_CENTER: "COMMAND CENTER",
+    MISSILE_ARSENAL: "MISSILE ARSENAL",
+    DIPLOMATIC_RELATIONS: "DIPLOMATIC RELATIONS",
+    PROPOSE_ALLIANCE: "PROPOSE ALLIANCE",
+    DECLARE_WAR: "DECLARE WAR",
+    PROPOSE_PEACE: "PROPOSE PEACE",
+    RELATIONS_IMPROVED: "RELATIONS IMPROVED WITH",
+    RELATIONS_DETERIORATED: "RELATIONS DETERIORATED WITH"
+  },
+  RU: {
+    SELECT_NATION: "ВЫБЕРИТЕ СВОЮ НАЦИЮ",
+    COMMAND_CENTER: "КОМАНДНЫЙ ЦЕНТР",
+    MISSILE_ARSENAL: "РАКЕТНЫЙ АРСЕНАЛ",
+    DIPLOMATIC_RELATIONS: "ДИПЛОМАТИЧЕСКИЕ ОТНОШЕНИЯ",
+    PROPOSE_ALLIANCE: "ПРЕДЛОЖИТЬ АЛЬЯНС",
+    DECLARE_WAR: "ОБЪЯВИТЬ ВОЙНУ",
+    PROPOSE_PEACE: "ПРЕДЛОЖИТЬ МИР",
+    RELATIONS_IMPROVED: "УЛУЧШЕНИЕ ОТНОШЕНИЙ С",
+    RELATIONS_DETERIORATED: "УХУДШЕНИЕ ОТНОШЕНИЙ С"
+  }
+};
+let currentLanguage = 'EN';
+const diplomaticHistory = new Map();
+function isWithinRange(start, end, range) {
+  const startLoc = projection.invert(start);
+  const endLoc = projection.invert(end);
+  const R = 6371;
+  const lat1 = startLoc[1] * Math.PI / 180;
+  const lat2 = endLoc[1] * Math.PI / 180;
+  const dLat = (endLoc[1] - startLoc[1]) * Math.PI / 180;
+  const dLon = (endLoc[0] - startLoc[0]) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return distance <= range;
+}
+function addTerminalLine(text, isWarning = false) {
+  const terminal = document.getElementById('terminal-content');
+  terminal.innerHTML += `> ${isWarning ? '<span class="enemy-alert">' : ''}${text}${isWarning ? '</span>' : ''}<br>`;
+  terminal.scrollTop = terminal.scrollHeight;
+}
+function createExplosion(coords) {
+  playSound('explosion-sound');
+  if (!playerCountry) {
+    addTerminalLine("ERROR: MUST SELECT NATION BEFORE LAUNCHING", true);
+    return;
+  }
+  const launchingCountry = playerCountry;
+  const hasSurvivingCities = majorCities[launchingCountry].some(city => {
+    const cityCoords = projection(city.coords);
+    return !detonations.filter(d => d.time < new Date()).some(det => {
+      const distance = Math.sqrt(Math.pow(det.location[0] - cityCoords[0], 2) + Math.pow(det.location[1] - cityCoords[1], 2));
+      return distance < det.yield / 20;
+    });
+  });
+  if (!hasSurvivingCities) {
+    addTerminalLine("ERROR: NO SURVIVING CITIES - MISSILE COMMAND OFFLINE", true);
+    return;
+  }
+  const explosionGroup = svg.select('.map-group').append('g').attr('class', 'explosion-group').attr('transform', `translate(${coords[0]},${coords[1]})`);
+  const radius = Math.sqrt(currentYield) * (window.innerWidth < 600 ? 3 : 5);
+  if (currentYield >= 100) {
+    const flash = svg.select('.map-group').append('rect').attr('width', width).attr('height', height).attr('x', 0).attr('y', 0).style('fill', 'white').style('opacity', 0);
+    flash.transition().duration(200).style('opacity', 1).transition().duration(3000).style('opacity', 0).remove();
+  }
+  const blastWave = explosionGroup.append('circle').attr('class', 'explosion').attr('cx', 0).attr('cy', 0).attr('r', 0).style('stroke', '#ff4444').style('fill', 'rgba(255, 68, 68, 0.3)').style('stroke-width', currentYield >= 100 ? 4 : 2);
+  if (currentYield >= 100) {
+    const shockwave = explosionGroup.append('circle').attr('class', 'explosion').attr('cx', 0).attr('cy', 0).attr('r', 0).style('stroke', '#ff8888').style('fill', 'none').style('stroke-width', 6);
+    const thermal = explosionGroup.append('circle').attr('class', 'explosion').attr('cx', 0).attr('cy', 0).attr('r', radius * 0.5).style('fill', 'rgba(255, 200, 50, 0.6)').style('stroke', 'none');
+    document.querySelector('.map-container').classList.add('shake');
+    setTimeout(() => {
+      document.querySelector('.map-container').classList.remove('shake');
+    }, 500);
+    blastWave.transition().duration(3500).attr('r', radius).style('opacity', 0).remove();
+    shockwave.transition().duration(4000).attr('r', radius * 1.5).style('opacity', 0).remove();
+    thermal.transition().duration(2500).style('opacity', 0).remove();
+  } else {
+    blastWave.transition().duration(2000).attr('r', radius).style('opacity', 0).remove();
+  }
+  const coords3d = projection.invert([coords[0], coords[1]]);
+  Object.values(majorCities).flat().forEach(city => {
+    const distance = Math.sqrt(Math.pow(coords3d[0] - city.coords[0], 2) + Math.pow(coords3d[1] - city.coords[1], 2));
+    if (distance < currentYield / 20) {
+      const casualtyRate = Math.min(1, currentYield / 100);
+      const casualties = Math.floor(city.population * casualtyRate);
+      const countryOfCity = Object.entries(majorCities).find(([country, cities]) => cities.some(c => c.name === city.name))[0];
+      currentPopulations[countryOfCity] = Math.max(0, currentPopulations[countryOfCity] - casualties);
+      addTerminalLine(`CITY ${city.name} DESTROYED - ${casualties.toLocaleString()} CASUALTIES`, true);
+      if (relations[countryOfCity][playerCountry] === 'ALLIED' && countryOfCity !== playerCountry) {
+        updateRelations(countryOfCity, playerCountry, 'HOSTILE');
+        addTerminalLine(`${countryOfCity} BREAKS ALLIANCE AFTER ATTACK`, true);
+      }
+      if (relations[countryOfCity][playerCountry] === 'NEUTRAL' && countryOfCity !== playerCountry) {
+        updateRelations(countryOfCity, playerCountry, 'HOSTILE');
+        addTerminalLine(`${countryOfCity} NOW HOSTILE AFTER ATTACK`, true);
+      }
+      if (countryOfCity === playerCountry) {
+        const remainingCities = majorCities[playerCountry].filter(c => {
+          const cityDistance = Math.sqrt(Math.pow(coords3d[0] - c.coords[0], 2) + Math.pow(coords3d[1] - c.coords[1], 2));
+          return cityDistance >= currentYield / 20;
+        });
+        if (remainingCities.length === 0) {
+          addTerminalLine(`CRITICAL: ALL ${playerCountry} CITIES DESTROYED`, true);
+          addTerminalLine(`${playerCountry} HAS FALLEN`, true);
+          playerCountry = "";
+          document.getElementById('player-country').value = "";
+        }
+      }
+      const cityPos = projection(city.coords);
+      svg.selectAll('.city-marker').filter(function () {
+        return this.cx.baseVal.value === cityPos[0] && this.cy.baseVal.value === cityPos[1];
+      }).remove();
+      svg.selectAll('.city-label').filter(function () {
+        return this.textContent === city.name;
+      }).remove();
+      checkForWinner();
+    }
+  });
+  const targetCountryCoords = projection.invert(coords);
+  const targetCountry = Object.entries(countryCoords).find(([country, coords]) => {
+    const dx = targetCountryCoords[0] - coords[0];
+    const dy = targetCountryCoords[1] - coords[1];
+    return Math.sqrt(dx * dx + dy * dy) < 20;
+  })?.[0];
+  if (targetCountry && targetCountry !== playerCountry) {
+    if (relations[targetCountry][playerCountry] !== 'HOSTILE') {
+      updateRelations(playerCountry, targetCountry, 'HOSTILE');
+      addTerminalLine(`WAR DECLARED ON ${targetCountry}`, true);
+      Object.keys(relations).forEach(country => {
+        if (relations[country][targetCountry] === 'ALLIED' && country !== playerCountry) {
+          updateRelations(country, playerCountry, 'HOSTILE');
+          addTerminalLine(`${country} JOINS WAR IN DEFENSE OF ${targetCountry}`, true);
+        }
+      });
+    }
+    setTimeout(() => {
+      const startCoords = projection(countryCoords[targetCountry]);
+      const endCoords = projection(countryCoords[playerCountry]);
+      currentYield = Math.floor(Math.random() * 95) + 5;
+      const missileTypes = Object.keys(tacticalMissiles);
+      selectedMissile = missileTypes[Math.floor(Math.random() * missileTypes.length)];
+      addTerminalLine(`WARNING: ${targetCountry} LAUNCHING RETALIATORY STRIKE`, true);
+      playSound('alert-sound');
+      createMissilePath(startCoords, endCoords);
+      if (relations[targetCountry][playerCountry] !== 'HOSTILE') {
+        updateRelations(targetCountry, playerCountry, 'HOSTILE');
+        addTerminalLine(`${targetCountry} NOW HOSTILE AFTER ATTACK`, true);
+      }
+      Object.entries(relations[targetCountry]).forEach(([ally, relation]) => {
+        if (relation === 'ALLIED' && ally !== playerCountry) {
+          setTimeout(() => {
+            const allyCoords = projection(countryCoords[ally]);
+            currentYield = Math.floor(Math.random() * 95) + 5;
+            selectedMissile = missileTypes[Math.floor(Math.random() * missileTypes.length)];
+            addTerminalLine(`WARNING: ${ally} JOINING RETALIATION AS ALLY OF ${targetCountry}`, true);
+            createMissilePath(allyCoords, endCoords);
+            updateRelations(ally, playerCountry, 'HOSTILE');
+          }, Math.random() * 5000 + 2000);
+        }
+      });
+    }, Math.random() * 3000 + 2000);
+  }
+  detonations.push({
+    location: coords,
+    yield: currentYield,
+    missile: selectedMissile,
+    time: new Date()
+  });
+  if (playerCountry) {
+    const explosionLoc = projection.invert([coords[0], coords[1]]);
+    const playerLoc = countryCoords[playerCountry];
+    const distance = Math.sqrt(Math.pow(explosionLoc[0] - playerLoc[0], 2) + Math.pow(explosionLoc[1] - playerLoc[1], 2));
+    if (distance < currentYield / 10) {
+      addTerminalLine('CRITICAL: DIRECT HIT ON COMMAND CENTER', true);
+      addTerminalLine('GAME OVER - COMMAND STRUCTURE DESTROYED', true);
+      if (aiInterval) clearInterval(aiInterval);
+      setTimeout(() => {
+        playerCountry = "";
+        document.getElementById('player-country').value = "";
+      }, 5000);
+    }
+  }
+  if (currentYield >= 100) {
+    addTerminalLine(`WARNING: RS-28 SARMAT LAUNCHED - EXTREME YIELD DETECTED`);
+    addTerminalLine(`CRITICAL: ${currentYield}MT DETONATION AT ${Math.round(coords[0])},${Math.round(coords[1])}`);
+    addTerminalLine(`CAUTION: MASSIVE THERMAL AND BLAST EFFECTS DETECTED`);
+  } else {
+    addTerminalLine(`MISSILE ${selectedMissile} LAUNCHED`);
+    addTerminalLine(`DETONATION: ${currentYield}MT YIELD AT ${Math.round(coords[0])},${Math.round(coords[1])}`);
+  }
+}
+function createMissilePath(start, end) {
+  const missileRanges = {
+    "ATACMS": 300,
+    "ISKANDER": 500,
+    "KALIBR": 2500,
+    "MINUTEMAN III": 13000,
+    "TRIDENT II": 12000,
+    "RS-28": 18000
+  };
+  const range = missileRanges[selectedMissile];
+  if (!isWithinRange(start, end, range)) {
+    addTerminalLine(`ERROR: TARGET BEYOND ${selectedMissile} RANGE OF ${range}KM`, true);
+    return;
+  }
+  const mapGroup = svg.select('.map-group');
+  const transformedStart = start;
+  const transformedEnd = end;
+  const missileGroup = mapGroup.append('g').attr('class', 'missile-group');
+  const dx = transformedEnd[0] - transformedStart[0];
+  const dy = transformedEnd[1] - transformedStart[1];
+  const dr = Math.sqrt(dx * dx + dy * dy);
+  const arcPath = `M ${transformedStart[0]},${transformedStart[1]} A ${dr},${dr} 0 0,1 ${transformedEnd[0]},${transformedEnd[1]}`;
+  const path = missileGroup.append('path').attr('class', 'missile-path').attr('d', arcPath);
+  playSound('launch-sound');
+  const missile = missileGroup.append('path').attr('class', 'missile').attr('d', 'M -5,-5 L 5,0 L -5,5 Z');
+  const pathLength = path.node().getTotalLength();
+  const duration = pathLength * 10;
+  const launchState = {
+    yield: currentYield,
+    missile: selectedMissile,
+    playerCountry: playerCountry
+  };
+  missile.transition().duration(duration).attrTween('transform', function () {
+    return function (t) {
+      const point = path.node().getPointAtLength(t * pathLength);
+      const previousPoint = path.node().getPointAtLength((t - 0.01) * pathLength);
+      const angle = Math.atan2(point.y - previousPoint.y, point.x - previousPoint.x) * 180 / Math.PI;
+      return `translate(${point.x},${point.y}) rotate(${angle})`;
+    };
+  }).on('end', function () {
+    const playerYield = currentYield;
+    const playerMissile = selectedMissile;
+    currentYield = launchState.yield;
+    selectedMissile = launchState.missile;
+    createExplosion(transformedEnd);
+    currentYield = playerYield;
+    selectedMissile = playerMissile;
+    missileGroup.remove();
+  });
+  path.transition().delay(duration).duration(500).style('opacity', 0).remove();
+}
+function checkForWinner() {
+  const survivingCountries = Object.entries(currentPopulations).filter(([_, pop]) => pop > 0).map(([country]) => country);
+  if (survivingCountries.length === 1) {
+    const winner = survivingCountries[0];
+    addTerminalLine(`GAME OVER - ${winner} IS VICTORIOUS`);
+    addTerminalLine(`SURVIVING POPULATION: ${currentPopulations[winner].toLocaleString()}`);
+    if (aiInterval) clearInterval(aiInterval);
+    setTimeout(() => {
+      playerCountry = "";
+      document.getElementById('player-country').value = "";
+    }, 5000);
+  } else if (survivingCountries.length === 0) {
+    addTerminalLine("GAME OVER - TOTAL ANNIHILATION");
+    addTerminalLine("NO SURVIVING POPULATIONS");
+    if (aiInterval) clearInterval(aiInterval);
+    setTimeout(() => {
+      playerCountry = "";
+      document.getElementById('player-country').value = "";
+    }, 5000);
+  }
+}
+function playSound(audioId) {
+  if (soundEnabled) {
+    const sound = document.getElementById(audioId);
+    if (sound) {
+      sound.volume = 0.5;
+      sound.currentTime = 0;
+      const playPromise = sound.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Audio play failed:', error);
+        });
+      }
+    } else {
+      console.log('Sound element not found:', audioId);
+    }
+  }
+}
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  if (!soundEnabled) {
+    document.getElementById('explosion-sound').pause();
+    document.getElementById('launch-sound').pause();
+    document.getElementById('alert-sound').pause();
+  }
+  addTerminalLine(`SOUND EFFECTS ${soundEnabled ? 'ENABLED' : 'DISABLED'}`);
+}
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  const music = document.getElementById('background-music');
+  if (musicEnabled) {
+    music.play().catch(e => console.log('Music play failed:', e));
+  } else {
+    music.pause();
+  }
+  addTerminalLine(`BACKGROUND MUSIC ${musicEnabled ? 'ENABLED' : 'DISABLED'}`);
+}
+const relations = {};
+const relationStates = ['HOSTILE', 'NEUTRAL', 'ALLIED'];
+function initializeRelations() {
+  const countries = Object.keys(countryCoords);
+  diplomaticHistory.clear();
+  countries.forEach(country1 => {
+    diplomaticHistory.set(country1, []);
+    relations[country1] = {};
+    countries.forEach(country2 => {
+      if (country1 !== country2) {
+        relations[country1][country2] = 'NEUTRAL';
+      }
+    });
+  });
+}
+function updateRelations(country1, country2, newState) {
+  if (country1 !== country2 && relationStates.includes(newState)) {
+    relations[country1][country2] = newState;
+    relations[country2][country1] = newState;
+    updateDiplomacyGrid();
+  }
+}
+function attemptDiplomaticAction(action, targetCountry) {
+  if (!playerCountry || !targetCountry) return;
+  const currentRelation = relations[playerCountry][targetCountry];
+  const timestamp = new Date().toLocaleTimeString();
+  const addHistoryEntry = entry => {
+    const history = diplomaticHistory.get(targetCountry) || [];
+    history.push(`[${timestamp}] ${entry}`);
+    if (history.length > 10) history.shift();
+    diplomaticHistory.set(targetCountry, history);
+  };
+  switch (action) {
+    case 'PROPOSE_ALLIANCE':
+      if (currentRelation === 'NEUTRAL') {
+        let chance = 0.4;
+        const history = diplomaticHistory.get(targetCountry) || [];
+        chance += history.filter(h => h.includes('PEACEFUL')).length * 0.1;
+        if (Math.random() < chance) {
+          updateRelations(playerCountry, targetCountry, 'ALLIED');
+          addHistoryEntry(`${targetCountry} ACCEPTED ALLIANCE`);
+          addTerminalLine(`${targetCountry} ACCEPTS ALLIANCE PROPOSAL`);
+        } else {
+          addHistoryEntry(`${targetCountry} REJECTED ALLIANCE`);
+          addTerminalLine(`${targetCountry} REJECTS ALLIANCE PROPOSAL`);
+        }
+      }
+      break;
+    case 'DECLARE_WAR':
+      if (currentRelation !== 'HOSTILE') {
+        updateRelations(playerCountry, targetCountry, 'HOSTILE');
+        addHistoryEntry(`${playerCountry} DECLARED WAR`);
+        addTerminalLine(`WAR DECLARED AGAINST ${targetCountry}`);
+        Object.keys(relations).forEach(country => {
+          if (relations[country][targetCountry] === 'ALLIED' && country !== playerCountry) {
+            updateRelations(country, playerCountry, 'HOSTILE');
+            addTerminalLine(`${country} JOINS WAR IN DEFENSE OF ${targetCountry}`, true);
+          }
+        });
+      }
+      break;
+    case 'PROPOSE_PEACE':
+      if (currentRelation === 'HOSTILE') {
+        let chance = 0.2;
+        const recentDetonations = detonations.filter(d => new Date() - d.time < 1000 * 60 * 5).length;
+        chance -= recentDetonations * 0.15;
+        if (Math.random() < chance) {
+          updateRelations(playerCountry, targetCountry, 'NEUTRAL');
+          addHistoryEntry('PEACE AGREEMENT REACHED');
+          addTerminalLine(`${targetCountry} ACCEPTS PEACE PROPOSAL`);
+        } else {
+          addHistoryEntry('PEACE PROPOSAL REJECTED');
+          addTerminalLine(`${targetCountry} REJECTS PEACE PROPOSAL`);
+        }
+      }
+      break;
+  }
+  updateDiplomacyGrid();
+}
+function startAI() {
+  if (aiInterval) clearInterval(aiInterval);
+  const recentAttacks = new Map();
+  aiInterval = setInterval(() => {
+    const countries = Object.keys(countryCoords).filter(c => {
+      return currentPopulations[c] > 0 && majorCities[c].some(city => {
+        const cityCoords = projection(city.coords);
+        return !detonations.some(det => {
+          const distance = Math.sqrt(Math.pow(det.location[0] - cityCoords[0], 2) + Math.pow(det.location[1] - cityCoords[1], 2));
+          return distance < det.yield / 20;
+        });
+      });
+    });
+    if (countries.length < 2) return;
+    if (Math.random() < 0.9) {
+      let attackingCountries = countries.filter(c => {
+        return c !== playerCountry && relations[c] && relations[c][playerCountry] === 'HOSTILE';
+      });
+      if (attackingCountries.length === 0) return;
+      const attackingCountry = attackingCountries[Math.floor(Math.random() * attackingCountries.length)];
+      if (relations[attackingCountry] && playerCountry && relations[attackingCountry][playerCountry] === 'ALLIED' && recentAttacks.has(playerCountry)) {
+        if (Math.random() < 0.9) {
+          const targetCountry = recentAttacks.get(playerCountry);
+          addTerminalLine(`${attackingCountry} LAUNCHING ALLIANCE DEFENSE FOR ${playerCountry}`, true);
+        }
+      }
+      const startCoords = projection(countryCoords[attackingCountry]);
+      let targetCountry = playerCountry;
+      if (!targetCountry || Math.random() < 0.3) {
+        const hostileTargets = countries.filter(c => c !== attackingCountry && relations[attackingCountry] && relations[attackingCountry][c] === 'HOSTILE');
+        if (hostileTargets.length > 0) {
+          targetCountry = hostileTargets[Math.floor(Math.random() * hostileTargets.length)];
+        }
+      }
+      if (!targetCountry) return;
+      const targetCities = majorCities[targetCountry].filter(city => {
+        const cityCoords = projection(city.coords);
+        return !detonations.some(det => {
+          const distance = Math.sqrt(Math.pow(det.location[0] - cityCoords[0], 2) + Math.pow(det.location[1] - cityCoords[1], 2));
+          return distance < det.yield / 20;
+        });
+      });
+      if (targetCities.length === 0) return;
+      const targetCity = targetCities[Math.floor(Math.random() * targetCities.length)];
+      const endCoords = projection(targetCity.coords);
+      currentYield = Math.floor(Math.random() * 95) + 25;
+      if (Math.random() < 0.95) {
+        createMissilePath(startCoords, endCoords);
+        recentAttacks.set(targetCountry, attackingCountry);
+        addTerminalLine(`WARNING: ${attackingCountry} LAUNCHING ATTACK ON ${targetCountry}`, true);
+        playSound('alert-sound');
+      }
+    }
+    if (Math.random() < 0.15) {
+      const aiCountry = countries[Math.floor(Math.random() * countries.length)];
+      const targetCountry = countries.find(c => c !== aiCountry);
+      if (relations[aiCountry] && relations[aiCountry][targetCountry] === 'NEUTRAL') {
+        if (Math.random() < 0.6) {
+          updateRelations(aiCountry, targetCountry, 'HOSTILE');
+          addTerminalLine(`${aiCountry} HAS DECLARED WAR ON ${targetCountry}`, true);
+          updateDiplomacyGrid();
+        } else if (Math.random() < 0.3) {
+          updateRelations(aiCountry, targetCountry, 'ALLIED');
+          addTerminalLine(`${aiCountry} AND ${targetCountry} HAVE FORMED AN ALLIANCE`);
+          updateDiplomacyGrid();
+        }
+      }
+    }
+  }, 5000);
+}
+function updateDiplomacyGrid() {
+  const grid = document.getElementById('diplomacy-grid');
+  grid.innerHTML = '';
+  const countryList = Object.keys(relations[playerCountry] || {}).filter(country => currentPopulations[country] > 0).sort((a, b) => {
+    const order = {
+      'HOSTILE': 0,
+      'ALLIED': 1,
+      'NEUTRAL': 2
+    };
+    return order[relations[playerCountry][a]] - order[relations[playerCountry][b]];
+  });
+  countryList.forEach(country => {
+    const relationClass = relations[playerCountry][country].toLowerCase();
+    const historyEntries = diplomaticHistory.get(country) || [];
+    const recentHistory = historyEntries.slice(-3).map(entry => `<div class="diplomacy-history-entry">► ${entry}</div>`).join('');
+    const countryCard = document.createElement('div');
+    countryCard.className = `diplomacy-status ${relationClass}`;
+    countryCard.innerHTML = `
+      <div class="relation-header">
+        <strong>${country}</strong>: ${relations[playerCountry][country]}
+      </div>
+      <div class="diplomacy-actions">
+        <span class="relation-action" onclick="attemptDiplomaticAction('PROPOSE_ALLIANCE', '${country}')">${translations[currentLanguage].PROPOSE_ALLIANCE}</span>
+        <span class="relation-action" onclick="attemptDiplomaticAction('DECLARE_WAR', '${country}')">${translations[currentLanguage].DECLARE_WAR}</span>
+        <span class="relation-action" onclick="attemptDiplomaticAction('PROPOSE_PEACE', '${country}')">${translations[currentLanguage].PROPOSE_PEACE}</span>
+      </div>
+      <div class="diplomacy-history">${recentHistory}</div>
+    `;
+    grid.appendChild(countryCard);
+  });
+}
+function toggleDiplomacyWindow() {
+  const dipWindow = document.getElementById('diplomacy-window');
+  dipWindow.classList.toggle('active');
+  if (dipWindow.classList.contains('active')) {
+    updateDiplomacyGrid();
+  }
+}
+document.getElementById('language-select').addEventListener('change', function () {
+  currentLanguage = this.value;
+  updateDiplomacyGrid();
+  document.querySelector('.start-menu h2').textContent = translations[currentLanguage].SELECT_NATION;
+  document.querySelector('.terminal-header').textContent = translations[currentLanguage].COMMAND_CENTER;
+  document.querySelector('.missile-menu .terminal-header').textContent = translations[currentLanguage].MISSILE_ARSENAL;
+});
+document.querySelectorAll('.missile-option').forEach(option => {
+  option.addEventListener('click', function () {
+    document.querySelectorAll('.missile-option').forEach(opt => opt.classList.remove('selected'));
+    this.classList.add('selected');
+    currentYield = parseInt(this.dataset.yield);
+    selectedMissile = this.dataset.name;
+    document.getElementById('yield').textContent = currentYield;
+    addTerminalLine(`SELECTED MISSILE: ${selectedMissile}`);
+  });
+});
+document.getElementById('player-country').addEventListener('change', function () {
+  playerCountry = this.value;
+  if (playerCountry) {
+    addTerminalLine(`ASSUMING COMMAND OF ${playerCountry} NUCLEAR FORCES`);
+    initializeRelations();
+    startAI();
+  } else {
+    addTerminalLine(`COMMAND STRUCTURE OFFLINE`);
+    if (aiInterval) clearInterval(aiInterval);
+  }
+});
+document.getElementById('start-game').addEventListener('click', async function () {
+  const selectedCountry = document.getElementById('initial-country-select').value;
+  if (selectedCountry) {
+    const startScreen = document.getElementById('start-screen');
+    if (startScreen) {
+      startScreen.classList.add('hidden');
+    }
+    const playerCountrySelect = document.getElementById('player-country');
+    if (playerCountrySelect) {
+      playerCountrySelect.value = selectedCountry;
+    }
+    playerCountry = selectedCountry;
+    try {
+      await showWemmSplash();
+    } catch (error) {
+      console.error('Error showing splash screen:', error);
+    }
+    if (musicEnabled) {
+      const music = document.getElementById('background-music');
+      if (music) {
+        music.volume = 0.3;
+        music.play().catch(e => console.log('Music play failed:', e));
+      }
+    }
+    addTerminalLine(`ASSUMING COMMAND OF ${selectedCountry} NUCLEAR FORCES`);
+    initializeRelations();
+    startAI();
+  } else {
+    addTerminalLine('ERROR: MUST SELECT A NATION', true);
+  }
+});
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(function (world) {
+  const countries = topojson.feature(world, world.objects.countries);
+  const mapGroup = svg.append('g').attr('class', 'map-group');
+  mapGroup.selectAll('path').data(countries.features).enter().append('path').attr('class', 'country').attr('d', path).on('click', function (event) {
+    if (!playerCountry) {
+      addTerminalLine("ERROR: MUST SELECT NATION BEFORE LAUNCHING", true);
+      return;
+    }
+    const hasSurvivingCities = majorCities[playerCountry].some(city => {
+      const cityCoords = projection(city.coords);
+      return !detonations.some(det => {
+        const distance = Math.sqrt(Math.pow(det.location[0] - cityCoords[0], 2) + Math.pow(det.location[1] - cityCoords[1], 2));
+        return distance < det.yield / 20;
+      });
+    });
+    if (!hasSurvivingCities) {
+      addTerminalLine("ERROR: NO SURVIVING CITIES - MISSILE COMMAND OFFLINE", true);
+      return;
+    }
+    const clickCoords = d3.pointer(event, svg.node());
+    const startCoords = projection(countryCoords[playerCountry]);
+    const range = {
+      "ATACMS": 300,
+      "ISKANDER": 500,
+      "KALIBR": 2500,
+      "MINUTEMAN III": 13000,
+      "TRIDENT II": 12000,
+      "RS-28": 18000
+    }[selectedMissile];
+    if (!isWithinRange(startCoords, clickCoords, range)) {
+      addTerminalLine(`ERROR: TARGET BEYOND ${selectedMissile} RANGE OF ${range}KM`, true);
+      return;
+    }
+    createMissilePath(startCoords, clickCoords);
+  });
+  const zoom = d3.zoom().scaleExtent([1, 8]);
+  svg.call(zoom);
+  drawCities();
+});
+function drawCities() {
+  svg.select('.map-group').selectAll('.city-marker').remove();
+  svg.select('.map-group').selectAll('.city-label').remove();
+  Object.values(majorCities).flat().forEach(city => {
+    const [x, y] = projection(city.coords);
+    svg.select('.map-group').append('circle').attr('class', 'city-marker').attr('cx', x).attr('cy', y).attr('r', window.innerWidth < 600 ? 1 : 2);
+    if (window.innerWidth > 600) {
+      svg.select('.map-group').append('text').attr('class', 'city-label').attr('x', x + 5).attr('y', y + 5).text(city.name);
+    }
+  });
+}
+window.addEventListener('resize', function () {
+  const newWidth = window.innerWidth;
+  const newHeight = window.innerHeight;
+  svg.attr('width', newWidth).attr('height', newHeight);
+  projection.scale(newWidth / (2.5 * Math.PI)).translate([newWidth / 2, newHeight / 1.5]);
+  svg.select('.map-group').selectAll('path').attr('d', path);
+  drawCities();
+});
+document.querySelector('[data-name="TRIDENT II"]').classList.add('selected');
+addTerminalLine('TYPE "HELP" FOR AVAILABLE COMMANDS');
+addTerminalLine('TYPE "ARSENAL" TO VIEW MISSILE OPTIONS');
+document.getElementById('terminal-input').addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') {
+    const command = this.value.toUpperCase();
+    addTerminalLine(command);
+    if (command.startsWith('SET YIELD')) {
+      const newYield = parseInt(command.split(' ')[2]);
+      if (!isNaN(newYield) && newYield > 0) {
+        currentYield = newYield;
+        document.getElementById('yield').textContent = currentYield;
+        addTerminalLine(`YIELD SET TO ${currentYield}MT`);
+      } else {
+        addTerminalLine('INVALID YIELD VALUE');
+      }
+    } else if (command === 'CLEAR') {
+      svg.select('.map-group').selectAll('.explosion').remove();
+      svg.select('.map-group').selectAll('.explosion-group').remove();
+      detonations = [];
+      addTerminalLine('CLEARING ALL DETONATIONS');
+    } else if (command === 'STATUS') {
+      addTerminalLine(`TOTAL DETONATIONS: ${detonations.length}`);
+      addTerminalLine(`CURRENT YIELD: ${currentYield}MT`);
+      addTerminalLine(`SELECTED MISSILE: ${selectedMissile}`);
+    } else if (command === 'HELP') {
+      addTerminalLine('AVAILABLE COMMANDS:');
+      addTerminalLine('SET YIELD <VALUE> - SET NUCLEAR YIELD IN MEGATONS');
+      addTerminalLine('CLEAR - REMOVE ALL DETONATIONS');
+      addTerminalLine('STATUS - SHOW CURRENT STATUS');
+      addTerminalLine('CLICK ON MAP TO LAUNCH MISSILE');
+      addTerminalLine('TOGGLE SOUND - ENABLE/DISABLE SOUND EFFECTS');
+      addTerminalLine('TOGGLE MUSIC - ENABLE/DISABLE BACKGROUND MUSIC');
+    } else if (command === 'ARSENAL') {
+      addTerminalLine('AVAILABLE MISSILES:');
+      addTerminalLine('TACTICAL MISSILES:');
+      addTerminalLine('ATACMS - 5MT YIELD - 300KM RANGE');
+      addTerminalLine('ISKANDER - 8MT YIELD - 500KM RANGE');
+      addTerminalLine('KALIBR - 10MT YIELD - 2500KM RANGE');
+      addTerminalLine('STRATEGIC MISSILES:');
+      addTerminalLine('MINUTEMAN III - 20MT YIELD - 13000KM RANGE');
+      addTerminalLine('TRIDENT II - 50MT YIELD - 12000KM RANGE');
+      addTerminalLine('RS-28 SARMAT - 100MT YIELD - 18000KM RANGE');
+    } else if (command === 'NATION') {
+      if (playerCountry) {
+        addTerminalLine(`CURRENT NATION: ${playerCountry}`);
+        addTerminalLine(`COORDINATES: ${countryCoords[playerCountry].join(', ')}`);
+      } else {
+        addTerminalLine('NO NATION SELECTED');
+      }
+    } else if (command === 'POPULATION') {
+      Object.entries(currentPopulations).filter(([_, pop]) => pop > 0).forEach(([country, pop]) => {
+        addTerminalLine(`${country}: ${pop.toLocaleString()}`);
+      });
+    } else if (command === 'TOGGLE SOUND') {
+      toggleSound();
+    } else if (command === 'TOGGLE MUSIC') {
+      toggleMusic();
+    } else {
+      addTerminalLine('UNKNOWN COMMAND. TYPE "HELP" FOR COMMANDS');
+    }
+    this.value = '';
+  }
+});
+async function typeText(text, element, delay = 100) {
+  if (!element) {
+    console.error('Element is null in typeText function');
+    return;
+  }
+  for (let char of text) {
+    element.textContent += char;
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+}
+async function showWemmSplash() {
+  const wemmText = document.getElementById('wemm-text');
+  if (!wemmText) {
+    console.error('wemm-text element not found');
+    return;
+  }
+  await typeText('WEMM PRODUCTION', wemmText);
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  const splash = document.getElementById('wemm_splash');
+  if (!splash) {
+    console.error('wemm_splash element not found');
+    return;
+  }
+  splash.style.opacity = '1';
+  await new Promise(resolve => {
+    splash.style.transition = 'opacity 1s';
+    splash.style.opacity = '0';
+    setTimeout(resolve, 1000);
+  });
+  splash.remove();
+}
+showWemmSplash();</script>
+</body></html>
